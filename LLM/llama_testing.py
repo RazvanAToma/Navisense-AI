@@ -5,23 +5,23 @@ from ollama import chat
 # ── 1. NODE REGISTRY ───────────────────────────────────────────
 NODE_REGISTRY = {
     "MoveToPoint": {
-        "script":      "nodes/moving_to_point.py",
+        "script":      "LLM/nodes/moving_to_point.py",
         "description": "Drives the boat to a target coordinate"
     },
     "PassThroughGate": {
-        "script":      "nodes/pass_through_gates.py",
+        "script":      "LLM/nodes/pass_through_gates.py",
         "description": "Aligns to and transits a detected gate"
     },
     "SearchPattern": {
-        "script":      "nodes/search_pattern.py",
+        "script":      "LLM/nodes/search_pattern.py",
         "description": "Executes a search pattern to find a missing object"
     },
     "OrbitTarget": {
-        "script":      "nodes/orbit_target.py",
+        "script":      "LLM/nodes/orbit_target.py",
         "description": "Orbits a detected object while scanning for a second object"
     },
     "HoldPosition": {
-        "script":      "nodes/hold_position.py",
+        "script":      "LLM/nodes/hold_position.py",
         "description": "Holds current position and waits"
     },
 }
@@ -30,10 +30,10 @@ NODE_REGISTRY = {
 # source: "estimated" = placed in GUI, approximate position
 # source: "detected"  = confirmed by YOLO/LiDAR, reliable position
 WORLD_MODEL = {
-    "green_buoy_1":    {"x": 10, "y": 20, "source": "detected"},
-    "red_buoy_1":      {"x": 12, "y": 24, "source": "estimated"},
-    "green_buoy_2":    {"x": 20, "y": 20, "source": "detected"},
-    "red_buoy_2":      {"x": 22, "y": 24, "source": "estimated"},
+    "green_buoy_1": {"x": 10, "y": 20, "source": "detected"},
+    "red_buoy_1":   {"x": 12, "y": 24, "source": "estimated"},
+    "green_buoy_2": {"x": 20, "y": 20, "source": "estimated"},
+    "red_buoy_2":   {"x": 22, "y": 24, "source": "estimated"},
 }
 
 # ── 3. BUILD PROMPT PARTS ──────────────────────────────────────
@@ -47,25 +47,27 @@ world_model_str = "\n".join(
     for obj, state in WORLD_MODEL.items()
 ) if WORLD_MODEL else "- No objects detected yet"
 
-custom_instructions = """
-You are a behavior tree assembler for a maritime autonomy system.
+custom_instructions = """You are a behavior tree assembler for a maritime autonomy system.
 Output raw JSON only. No explanation, no markdown, no code fences.
 Only use nodes from the provided registry. Never invent node names.
 Use the world model to make smart decisions — if a required object is missing, search for it first.
-Always include a reasoning field explaining why each node was chosen.
 The example below shows FORMAT ONLY. Base all logic solely on the actual world model and task requirements provided.
 World model entries marked [estimated] are approximate GUI placements — navigate toward that area but search locally to confirm.
-World model entries marked [detected] are confirmed by sensors — trust and use them directly."""
+World model entries marked [detected] are confirmed by sensors — trust and use them directly.
+Each step in the sequence must be its own object with a node, reason, and target field.
+target must always be an {x, y} coordinate the boat should move toward or search around for that step.
+For detected objects use their exact position. For estimated objects use their position as a search center.
+"""
 
 example_output = f"""
 EXAMPLE FORMAT (structure only, do not copy the logic):
 {{
   "task": "ExampleTask",
-  "sequence": ["NodeA", "NodeB"],
-  "reasoning": {{
-    "NodeA": "why NodeA was chosen",
-    "NodeB": "why NodeB was chosen"
-  }}
+  "sequence": [
+    {{"node": "NodeA", "reason": "why NodeA was chosen here", "target": {{"x": 5, "y": 10}}}},
+    {{"node": "NodeB", "reason": "why NodeB was chosen here", "target": {{"x": 12, "y": 18}}}},
+    {{"node": "NodeA", "reason": "why NodeA is used again",   "target": {{"x": 20, "y": 25}}}}
+  ]
 }}
 
 NODE REGISTRY:
@@ -115,19 +117,27 @@ except json.JSONDecodeError as e:
     print(f"Invalid JSON from LLM: {e}")
     exit(1)
 
-for node_id in spec["sequence"]:
-    if node_id not in NODE_REGISTRY:
-        print(f"Unknown node '{node_id}' — rejected")
+# Validate all nodes exist and targets are present
+for step in spec["sequence"]:
+    if step["node"] not in NODE_REGISTRY:
+        print(f"Unknown node '{step['node']}' — rejected")
+        exit(1)
+    if "target" not in step:
+        print(f"Missing target for step '{step['node']}' — rejected")
         exit(1)
 
 print(f"Task:     {spec['task']}")
-print(f"Sequence: {spec['sequence']}")
+print(f"Sequence: {[step['node'] for step in spec['sequence']]}")
 print("Tree valid. Executing...\n")
 
 # ── 6. EXECUTE ─────────────────────────────────────────────────
-for node_id in spec["sequence"]:
-    reason = spec.get("reasoning", {}).get(node_id, "")
-    print(f">> Running: {node_id} — {reason}")
+for step in spec["sequence"]:
+    node_id = step["node"]
+    reason  = step.get("reason", "")
+    target  = step.get("target", {})
+    print(f">> Running: {node_id}")
+    print(f"   Reason:  {reason}")
+    print(f"   Target:  x={target.get('x')}, y={target.get('y')}")
     subprocess.run(["python", NODE_REGISTRY[node_id]["script"]], check=True)
     print(f">> {node_id} done\n")
 
