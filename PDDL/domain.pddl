@@ -2,84 +2,122 @@
 
   (:requirements :strips :typing :negative-preconditions)
 
-  (:types gate)
+  (:types task)
 
   (:predicates
-    (gate_identified   ?g - gate)   ; both buoys confirmed within range
-    (boat_aligned      ?g - gate)   ; boat is heading toward gate center
-    (gate_passed       ?g - gate)   ; gate has been transited
-    (green_confirmed   ?g - gate)   ; green buoy confirmed by sensors
-    (red_confirmed     ?g - gate)   ; red buoy confirmed by sensors
+    ; ── object detection status
+    (green_confirmed   ?t - task)
+    (red_confirmed     ?t - task)
+    (beacon_confirmed  ?t - task)
+    (yellow_confirmed  ?t - task)
+
+    ; ── task progression
+    (gate_identified   ?t - task)
+    (gate_aligned      ?t - task)
+    (gate_passed       ?t - task)
+    (speedgate_done    ?t - task)
+
+    ; ── task type flags (set in problem file)
+    (is_gate           ?t - task)
+    (is_speedgate      ?t - task)
   )
 
-  ; ── Search for green buoy (estimated position only)
+  ; ══════════════════════════════════════════════
+  ; SEARCH ACTIONS — used when objects are estimated
+  ; ══════════════════════════════════════════════
+
   (:action search_for_green
-    :parameters (?g - gate)
-    :precondition (not (green_confirmed ?g))
-    :effect       (green_confirmed ?g)
+    :parameters (?t - task)
+    :precondition (not (green_confirmed ?t))
+    :effect       (green_confirmed ?t)
   )
 
-  ; ── Move to estimated green buoy position (already detected)
-  (:action move_to_green
-    :parameters (?g - gate)
+  (:action search_for_red
+    :parameters (?t - task)
     :precondition (and
-      (green_confirmed ?g)
-      (not (red_confirmed ?g))
+      (green_confirmed ?t)
+      (not (red_confirmed ?t))
     )
-    :effect (green_confirmed ?g)  ; no change, just movement
+    :effect (red_confirmed ?t)
   )
 
-  ; ── Orbit green buoy to find red partner
-  (:action orbit_for_red
-    :parameters (?g - gate)
+  (:action search_for_beacon
+    :parameters (?t - task)
     :precondition (and
-      (green_confirmed ?g)
-      (not (red_confirmed ?g))
+      (is_speedgate ?t)
+      (gate_passed  ?t)
+      (not (beacon_confirmed ?t))
     )
-    :effect (red_confirmed ?g)
+    :effect (beacon_confirmed ?t)
   )
 
-  ; ── Move to estimated red buoy area to confirm it
-  (:action move_to_red_estimate
-    :parameters (?g - gate)
+  (:action search_for_yellow
+    :parameters (?t - task)
     :precondition (and
-      (green_confirmed ?g)
-      (not (red_confirmed ?g))
+      (is_speedgate     ?t)
+      (beacon_confirmed ?t)
+      (not (yellow_confirmed ?t))
     )
-    :effect (red_confirmed ?g)
+    :effect (yellow_confirmed ?t)
   )
 
-  ; ── Identify gate once both buoys confirmed
+  ; ══════════════════════════════════════════════
+  ; GATE TASK ACTIONS
+  ; ══════════════════════════════════════════════
+
   (:action identify_gate
-    :parameters (?g - gate)
+    :parameters (?t - task)
     :precondition (and
-      (green_confirmed ?g)
-      (red_confirmed  ?g)
-      (not (gate_identified ?g))
+      (green_confirmed ?t)
+      (red_confirmed   ?t)
+      (not (gate_identified ?t))
     )
-    :effect (gate_identified ?g)
+    :effect (gate_identified ?t)
   )
 
-  ; ── Align boat to gate centerline
   (:action align_to_gate
-    :parameters (?g - gate)
+    :parameters (?t - task)
     :precondition (and
-      (gate_identified ?g)
-      (not (boat_aligned ?g))
-      (not (gate_passed  ?g))
+      (gate_identified ?t)
+      (not (gate_aligned ?t))
     )
-    :effect (boat_aligned ?g)
+    :effect (gate_aligned ?t)
   )
 
-  ; ── Transit the gate
   (:action pass_through_gate
-    :parameters (?g - gate)
+    :parameters (?t - task)
     :precondition (and
-      (gate_identified ?g)
-      (boat_aligned    ?g)
-      (not (gate_passed ?g))
+      (is_gate       ?t)
+      (gate_aligned  ?t)
+      (not (gate_passed ?t))
     )
-    :effect (gate_passed ?g)
+    :effect (gate_passed ?t)
+  )
+
+  ; ══════════════════════════════════════════════
+  ; SPEEDGATE TASK ACTIONS
+  ; ══════════════════════════════════════════════
+
+  (:action enter_speedgate
+    :parameters (?t - task)
+    :precondition (and
+      (is_speedgate  ?t)
+      (gate_aligned  ?t)
+      (not (gate_passed ?t))
+    )
+    :effect (gate_passed ?t)
+  )
+
+  (:action run_speedgate
+    :parameters (?t - task)
+    :precondition (and
+      (is_speedgate     ?t)
+      (gate_passed      ?t)
+      (beacon_confirmed ?t)
+      (yellow_confirmed ?t)
+      (not (speedgate_done ?t))
+    )
+    :effect (speedgate_done ?t)
   )
 
 )

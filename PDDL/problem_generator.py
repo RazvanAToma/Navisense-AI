@@ -1,32 +1,48 @@
 """
 problem_generator.py
-Generates a PDDL problem file from identified gates.
-detected  → fact added to :init (planner can use it directly)
+Generates a PDDL problem file from identified tasks.
+detected  → fact added to :init (planner uses it directly)
 estimated → fact NOT added (planner must search/confirm first)
 """
 
 
-def generate_problem(gates, output_path='PDDL/problem.pddl'):
-    gate_ids = [f"gate{i+1}" for i in range(len(gates))]
+def generate_problem(tasks, output_path='problem.pddl'):
+    task_ids = [f"task{i+1}" for i in range(len(tasks))]
 
-    objects_str = ' '.join(gate_ids) + ' - gate'
+    objects_str = ' '.join(task_ids) + ' - task'
 
     init_facts = []
-    for i, gate in enumerate(gates):
-        gid = gate_ids[i]
+    goal_facts = []
 
-        if gate['green_source'] == 'detected':
-            init_facts.append(f'(green_confirmed {gid})')
+    for i, task in enumerate(tasks):
+        tid = task_ids[i]
 
-        if gate['red_source'] == 'detected':
-            init_facts.append(f'(red_confirmed {gid})')
+        # Set task type flag
+        if task['type'] == 'speedgate':
+            init_facts.append(f'(is_speedgate {tid})')
+        else:
+            init_facts.append(f'(is_gate {tid})')
 
-    init_str = '\n    '.join(init_facts) if init_facts else '; nothing confirmed yet'
+        # Add confirmed detections to init
+        if task['green_source'] == 'detected':
+            init_facts.append(f'(green_confirmed {tid})')
+        if task['red_source'] == 'detected':
+            init_facts.append(f'(red_confirmed {tid})')
+        if task['beacon_source'] == 'detected':
+            init_facts.append(f'(beacon_confirmed {tid})')
+        if task['yellow_source'] == 'detected':
+            init_facts.append(f'(yellow_confirmed {tid})')
 
-    goal_facts = [f'(gate_passed {gid})' for gid in gate_ids]
-    goal_str   = '\n      '.join(goal_facts)
+        # Goal depends on task type
+        if task['type'] == 'speedgate':
+            goal_facts.append(f'(speedgate_done {tid})')
+        else:
+            goal_facts.append(f'(gate_passed {tid})')
 
-    problem = f"""(define (problem roboboat-gates)
+    init_str = '\n    '.join(init_facts) if init_facts else '; nothing pre-confirmed'
+    goal_str = '\n      '.join(goal_facts)
+
+    problem = f"""(define (problem roboboat-mission)
   (:domain maritime-autonomy)
 
   (:objects
@@ -48,8 +64,9 @@ def generate_problem(gates, output_path='PDDL/problem.pddl'):
     with open(output_path, 'w') as f:
         f.write(problem)
 
-    print(f"  [problem_generator] Written: {output_path}")
-    print(f"  [problem_generator] Gates: {gate_ids}")
-    print(f"  [problem_generator] Init facts: {init_facts if init_facts else 'none'}")
+    print(f"  [problem_gen] Written: {output_path}")
+    for i, task in enumerate(tasks):
+        print(f"  [problem_gen] task{i+1} = {task['type']} "
+              f"(green:{task['green_source']} red:{task['red_source']})")
 
     return output_path

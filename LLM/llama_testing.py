@@ -6,23 +6,53 @@ from ollama import chat
 NODE_REGISTRY = {
     "MoveToPoint": {
         "script":      "LLM/nodes/moving_to_point.py",
-        "description": "Drives the boat to a target coordinate"
+        "description": (
+            "Drives the boat in a straight line to a single (x, y) coordinate. "
+            "Use this when the target position is already known and confirmed. "
+            "Do NOT use this to search — use SearchPattern instead. "
+            "Do NOT use this to pass through a gate — use PassThroughGate instead. "
+            "Always precedes PassThroughGate or DriveSpeedgate when the boat needs "
+            "to reposition before executing a task."
+        )
     },
     "PassThroughGate": {
         "script":      "LLM/nodes/pass_through_gates.py",
-        "description": "Aligns to and transits a detected gate"
+        "description": (
+            "Aligns the boat perpendicular to the gate centerline and drives through the midpoint between the green and red buoy pair. "
+            "REQUIRES: both green and red buoy of this gate to be confirmed. "
+            "Used for the standard gate task only. "
+            "Do NOT use this for speedgate entry/exit — use DriveSpeedgate instead."
+        )
     },
     "SearchPattern": {
         "script":      "LLM/nodes/search_pattern.py",
-        "description": "Executes a search pattern to find a missing object"
-    },
-    "OrbitTarget": {
-        "script":      "LLM/nodes/orbit_target.py",
-        "description": "Orbits a detected object while scanning for a second object"
+        "description": (
+            "Executes a spiral or lawnmower search pattern centered on the given (x, y) coordinate. "
+            "Use this when a required object is marked [estimated] from the world model. "
+            "After SearchPattern completes, assume the object has been found and confirmed. "
+            "Do NOT use this if the object is already marked [detected]."
+        )
     },
     "HoldPosition": {
         "script":      "LLM/nodes/hold_position.py",
-        "description": "Holds current position and waits"
+        "description": (
+            "Stops the boat and holds its current position. "
+            "Use this after completing a task as a hard stop before the next task begins, or to hold position during a task if something unexpected happens. "
+            "Target should be the last known boat position or the position just after gate passage. "
+        )
+    },
+    "DriveSpeedgate": {
+        "script":      "LLM/nodes/drive_speedgate.py",
+        "description": (
+            "Executes the full speedgate sequence as a single compound action: "
+            "(1) enters through the gate (green+red buoy pair), "
+            "(2) keeps the beacon on its left side while passing, "
+            "(3) circles clockwise around the yellow buoy, "
+            "(4) keeps the beacon on its left side again while returning, "
+            "(5) exits back through the same gate. "
+            "REQUIRES: gate (green+red buoy pair), beacon, and yellow buoy all confirmed. "
+            "Do NOT split this into separate steps — it is one atomic action."
+        )
     },
 }
 
@@ -30,10 +60,15 @@ NODE_REGISTRY = {
 # source: "estimated" = placed in GUI, approximate position
 # source: "detected"  = confirmed by YOLO/LiDAR, reliable position
 WORLD_MODEL = {
-    "green_buoy_1": {"x": 10, "y": 20, "source": "detected"},
-    "red_buoy_1":   {"x": 12, "y": 24, "source": "estimated"},
+    # Gate
+    "green_buoy_1": {"x": 10, "y": 20, "source": "estimated"},
+    "red_buoy_1":   {"x": 10, "y": 24, "source": "estimated"},
+
+    # Speedgate
     "green_buoy_2": {"x": 20, "y": 20, "source": "estimated"},
-    "red_buoy_2":   {"x": 22, "y": 24, "source": "estimated"},
+    "red_buoy_2":   {"x": 20, "y": 24, "source": "estimated"},
+    "beacon_1":     {"x": 25, "y": 22, "source": "estimated"},
+    "yellow_buoy_1":{"x": 35, "y": 22, "source": "estimated"},
 }
 
 # ── 3. BUILD PROMPT PARTS ──────────────────────────────────────
@@ -47,16 +82,39 @@ world_model_str = "\n".join(
     for obj, state in WORLD_MODEL.items()
 ) if WORLD_MODEL else "- No objects detected yet"
 
-custom_instructions = """You are a behavior tree assembler for a maritime autonomy system.
+custom_instructions = f"""
+You are a behavior tree assembler for a maritime autonomy system.
 Output raw JSON only. No explanation, no markdown, no code fences.
+
 Only use nodes from the provided registry. Never invent node names.
-Use the world model to make smart decisions — if a required object is missing, search for it first.
-The example below shows FORMAT ONLY. Base all logic solely on the actual world model and task requirements provided.
-World model entries marked [estimated] are approximate GUI placements — navigate toward that area but search locally to confirm.
-World model entries marked [detected] are confirmed by sensors — trust and use them directly.
-Each step in the sequence must be its own object with a node, reason, and target field.
-target must always be an {x, y} coordinate the boat should move toward or search around for that step.
-For detected objects use their exact position. For estimated objects use their position as a search center.
+Every step must have exactly three fields: "node", "reason", "target".
+
+[detected] means confirmed by sensors. Use directly. Do NOT search for it.
+[estimated] means approximate position from operator. Must SearchPattern before using.
+
+NODE REGISTRY:
+{node_descriptions}
+
+CURRENT WORLD MODEL:
+{world_model_str}
+
+gate      = green buoy + nearest red buoy
+speedgate = gate + beacon + yellow buoy
+one unit in x or y equals one meter in the real world
+buoys further than 10m apart form an invalid gate, check this before putting together two buoys
+once a buoy is used it cannot be reused
+once a gate is used it cannot be reused for another task
+only look for one gate at a time
+Complete one task fully before starting the next.
+
+
+TASK REQUIREMENTS (in this exact order):
+- task_1: detect gate → pass through gate → stop.
+- task_2: detect speedgate → run speedgate → stop.
+
+
+Based on what is detected, estimated, or missing, assemble a sequence to complete both tasks.
+Output JSON now.
 """
 
 example_output = f"""
@@ -64,34 +122,11 @@ EXAMPLE FORMAT (structure only, do not copy the logic):
 {{
   "task": "ExampleTask",
   "sequence": [
-    {{"node": "NodeA", "reason": "why NodeA was chosen here", "target": {{"x": 5, "y": 10}}}},
-    {{"node": "NodeB", "reason": "why NodeB was chosen here", "target": {{"x": 12, "y": 18}}}},
-    {{"node": "NodeA", "reason": "why NodeA is used again",   "target": {{"x": 20, "y": 25}}}}
+    {{"node": "NodeA", "reason": "why NodeA was chosen here"}},
+    {{"node": "NodeB", "reason": "why NodeB was chosen here"}},
+    {{"node": "NodeA", "reason": "why NodeA is used again"}}
   ]
 }}
-
-NODE REGISTRY:
-{node_descriptions}
-
-CURRENT WORLD MODEL (only detected objects are listed):
-{world_model_str}
-
-LOGIC:
-gate = green buoy + nearest red buoy
-one unit in x or y equals one meter in the real world.
-check if buoys are further than 10m apart (if they are, gate is invalid)
-once a buoy is used, it cannot be reused.
-only look for one gate at a time, other gates are not relevant until the previous gate is passed.
-
-TASK REQUIREMENTS:
-detect gate, pass through gate, stop after passing gate.
-then
-detect gate, pass through gate, stop after passing gate.
-end mission.
-
-Based on what is detected, estimated, or missing, assemble a sequence to complete the task.
-
-Output JSON now.
 """
 
 # ── 4. ASK LLM ─────────────────────────────────────────────────

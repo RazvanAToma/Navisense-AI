@@ -1,5 +1,6 @@
 """
-Lightweight STRIPS planner — no external dependencies.
+planner.py
+Lightweight STRIPS planner — pure Python, no external dependencies.
 Supports: :strips :typing :negative-preconditions
 """
 
@@ -8,10 +9,10 @@ from collections import deque
 import re
 
 
-# ── PDDL PARSER ────────────────────────────────────────────────
+# ── PARSER ─────────────────────────────────────────────────────
 
 def tokenize(text):
-    text = re.sub(r';[^\n]*', '', text)       # strip comments
+    text = re.sub(r';[^\n]*', '', text)
     text = text.replace('(', ' ( ').replace(')', ' ) ')
     return text.split()
 
@@ -23,12 +24,12 @@ def parse_sexp(tokens):
         lst = []
         while tokens[0] != ')':
             lst.append(parse_sexp(tokens))
-        tokens.pop(0)  # remove ')'
+        tokens.pop(0)
         return lst
     return token
 
 def parse_file(path):
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         text = f.read().lower()
     tokens = tokenize(text)
     results = []
@@ -37,203 +38,124 @@ def parse_file(path):
     return results[0] if len(results) == 1 else results
 
 
-# ── DOMAIN LOADER ──────────────────────────────────────────────
+# ── DOMAIN ─────────────────────────────────────────────────────
 
 class Domain:
     def __init__(self, path):
-        tree = parse_file(path)
-        assert tree[0] == 'define'
-
-        self.types   = {}   # type -> parent
+        tree    = parse_file(path)
         self.actions = []
-
         for section in tree[2:]:
-            tag = section[0]
-            if tag == ':types':
-                self._parse_types(section[1:])
-            elif tag == ':action':
+            if section[0] == ':action':
                 self.actions.append(self._parse_action(section))
-
-    def _parse_types(self, tokens):
-        i = 0
-        pending = []
-        while i < len(tokens):
-            if tokens[i] == '-':
-                parent = tokens[i+1]
-                for t in pending:
-                    self.types[t] = parent
-                pending = []
-                i += 2
-            else:
-                pending.append(tokens[i])
-                i += 1
-        for t in pending:
-            self.types[t] = 'object'
 
     def _parse_action(self, tokens):
         action = {'name': tokens[1], 'params': [], 'pre': [], 'eff': []}
         i = 2
         while i < len(tokens):
             key = tokens[i]
-            if key == ':parameters':
-                action['params'] = self._parse_params(tokens[i+1])
-                i += 2
-            elif key == ':precondition':
-                action['pre'] = tokens[i+1]
-                i += 2
-            elif key == ':effect':
-                action['eff'] = tokens[i+1]
-                i += 2
-            else:
-                i += 1
+            if   key == ':parameters':  action['params'] = self._parse_params(tokens[i+1]); i += 2
+            elif key == ':precondition': action['pre']    = tokens[i+1]; i += 2
+            elif key == ':effect':       action['eff']    = tokens[i+1]; i += 2
+            else: i += 1
         return action
 
     def _parse_params(self, lst):
-        params = []
-        i = 0
-        while i < len(lst):
-            if lst[i] == '-':
-                i += 2
-            else:
-                params.append(lst[i])
-                i += 1
-        return params
+        return [lst[i] for i in range(len(lst)) if lst[i] != '-' and (i == 0 or lst[i-1] != '-')]
 
 
-# ── PROBLEM LOADER ─────────────────────────────────────────────
+# ── PROBLEM ────────────────────────────────────────────────────
 
 class Problem:
     def __init__(self, path):
-        tree = parse_file(path)
-        assert tree[0] == 'define'
-
-        self.objects = {}   # name -> type
+        tree         = parse_file(path)
+        self.objects = {}
         self.init    = set()
         self.goal    = []
-
         for section in tree[2:]:
             tag = section[0]
             if tag == ':objects':
                 self._parse_objects(section[1:])
             elif tag == ':init':
                 for fact in section[1:]:
-                    self.init.add(self._fact(fact))
+                    self.init.add(tuple(fact))
             elif tag == ':goal':
                 self.goal = section[1]
 
     def _parse_objects(self, tokens):
-        i = 0
-        pending = []
+        i, pending = 0, []
         while i < len(tokens):
             if tokens[i] == '-':
-                obj_type = tokens[i+1]
-                for o in pending:
-                    self.objects[o] = obj_type
-                pending = []
-                i += 2
+                for o in pending: self.objects[o] = tokens[i+1]
+                pending = []; i += 2
             else:
-                pending.append(tokens[i])
-                i += 1
-
-    def _fact(self, lst):
-        return tuple(lst)
+                pending.append(tokens[i]); i += 1
 
 
-# ── STATE EVALUATION ───────────────────────────────────────────
+# ── STATE LOGIC ────────────────────────────────────────────────
 
-def eval_condition(cond, state, binding):
-    if not cond:
-        return True
-    if isinstance(cond, str):
-        return True
-    head = cond[0]
+def eval_cond(cond, state, b):
+    if not cond or isinstance(cond, str): return True
+    h = cond[0]
+    if h == 'and': return all(eval_cond(c, state, b) for c in cond[1:])
+    if h == 'not': return not eval_cond(cond[1], state, b)
+    return tuple(b.get(t, t) for t in cond) in state
 
-    if head == 'and':
-        return all(eval_condition(c, state, binding) for c in cond[1:])
-    if head == 'not':
-        return not eval_condition(cond[1], state, binding)
-
-    # ground the fact
-    grounded = tuple(binding.get(t, t) for t in cond)
-    return grounded in state
-
-def apply_effect(eff, state, binding):
+def apply_eff(eff, state, b):
     state = set(state)
-    if not eff:
+    if not eff or isinstance(eff, str): return state
+    h = eff[0]
+    if h == 'and':
+        for e in eff[1:]: state = apply_eff(e, state, b)
         return state
-    if isinstance(eff, str):
+    if h == 'not':
+        state.discard(tuple(b.get(t, t) for t in eff[1]))
         return state
-    head = eff[0]
-
-    if head == 'and':
-        for e in eff[1:]:
-            state = apply_effect(e, state, binding)
-        return state
-    if head == 'not':
-        grounded = tuple(binding.get(t, t) for t in eff[1])
-        state.discard(grounded)
-        return state
-
-    grounded = tuple(binding.get(t, t) for t in eff)
-    state.add(grounded)
+    state.add(tuple(b.get(t, t) for t in eff))
     return state
 
+def goal_met(goal, state):
+    if not goal or isinstance(goal, str): return True
+    h = goal[0]
+    if h == 'and': return all(goal_met(g, state) for g in goal[1:])
+    if h == 'not': return tuple(goal[1]) not in state
+    return tuple(goal) in state
 
-# ── GROUNDING ─────────────────────────────────────────────────
 
-def ground_actions(domain, problem):
+# ── PLANNER ────────────────────────────────────────────────────
+
+def plan(domain_path, problem_path):
+    domain  = Domain(domain_path)
+    problem = Problem(problem_path)
+    objects = list(problem.objects.keys())
+
+    # Ground all actions
     grounded = []
     for action in domain.actions:
         params = action['params']
         if not params:
             grounded.append((action['name'], {}, action['pre'], action['eff']))
             continue
-        # get objects of matching type (simplified: use all objects)
-        candidates = list(problem.objects.keys())
-        for combo in product(candidates, repeat=len(params)):
+        for combo in product(objects, repeat=len(params)):
             binding = dict(zip(params, combo))
-            name = f"{action['name']}({','.join(combo)})"
+            name    = f"{action['name']}({','.join(combo)})"
             grounded.append((name, binding, action['pre'], action['eff']))
-    return grounded
 
-
-# ── BFS PLANNER ────────────────────────────────────────────────
-
-def goal_reached(goal, state):
-    if not goal:
-        return True
-    head = goal[0]
-    if head == 'and':
-        return all(goal_reached(g, state) for g in goal[1:])
-    if head == 'not':
-        grounded = tuple(goal[1])
-        return grounded not in state
-    return tuple(goal) in state
-
-def plan(domain_path, problem_path):
-    domain  = Domain(domain_path)
-    problem = Problem(problem_path)
-
-    grounded = ground_actions(domain, problem)
-    init_state = frozenset(problem.init)
-
-    queue   = deque([(init_state, [])])
-    visited = {init_state}
+    init  = frozenset(problem.init)
+    queue = deque([(init, [])])
+    seen  = {init}
 
     while queue:
-        state, actions_taken = queue.popleft()
-
-        if goal_reached(problem.goal, state):
-            return actions_taken
-
+        state, history = queue.popleft()
+        if goal_met(problem.goal, state):
+            return history
         for (name, binding, pre, eff) in grounded:
-            if eval_condition(pre, state, binding):
-                new_state = frozenset(apply_effect(eff, state, binding))
-                if new_state not in visited:
-                    visited.add(new_state)
-                    queue.append((new_state, actions_taken + [name]))
+            if eval_cond(pre, state, binding):
+                new_state = frozenset(apply_eff(eff, state, binding))
+                if new_state not in seen:
+                    seen.add(new_state)
+                    queue.append((new_state, history + [name]))
 
-    return None  # no plan found
+    return None
 
 
 if __name__ == '__main__':
@@ -244,7 +166,6 @@ if __name__ == '__main__':
     result = plan(sys.argv[1], sys.argv[2])
     if result:
         print("Plan found:")
-        for step in result:
-            print(f"  {step}")
+        for step in result: print(f"  {step}")
     else:
         print("No plan found.")

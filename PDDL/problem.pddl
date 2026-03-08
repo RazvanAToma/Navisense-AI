@@ -1,19 +1,19 @@
-(define (problem roboboat-gates)
+(define (problem roboboat-mission)
   (:domain maritime-autonomy)
 
   (:objects
-    gate1 gate2 - gate
+    task1 task2 - task
   )
 
   (:init
-    (green_confirmed gate1)
-    (green_confirmed gate2)
+    (is_speedgate task1)
+    (is_gate task2)
   )
 
   (:goal
     (and
-      (gate_passed gate1)
-      (gate_passed gate2)
+      (speedgate_done task1)
+      (gate_passed task2)
     )
   )
 
