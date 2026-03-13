@@ -1,0 +1,34 @@
+{
+  "objects": {
+    "green_buoy_5": {
+      "type": "green_buoy",
+      "x": 10,
+      "y": 20,
+      "source": "estimated"
+    },
+    "green_buoy_4": {
+      "type": "green_buoy",
+      "x": 20,
+      "y": 20,
+      "source": "estimated"
+    },
+    "red_buoy_1": {
+      "type": "red_buoy",
+      "x": 20,
+      "y": 24,
+      "source": "estimated"
+    },
+    "red_buoy_2": {
+      "type": "red_buoy",
+      "x": 11,
+      "y": 24,
+      "source": "estimated"
+    },
+    "triangle_1": {
+      "type": "triangle",
+      "x": 35,
+      "y": 25,
+      "source": "estimated"
+    }
+  }
+}
