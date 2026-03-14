@@ -45,6 +45,7 @@ Objects:
 
 RULES:
 - gate      = one green buoy + nearest red buoy, must be within 10m of each other
+- towergate = one green tower + nearest red tower, must be within 15m of each other
 - speedgate = gate + beacon + yellow buoy, all must be confirmed before DriveSpeedgate
 - waterdelivery = triangle
 - Buoys further than 10m apart form an invalid gate
@@ -56,6 +57,8 @@ RULES:
 - Each task MUST use a distinct, non-consumed set of object_ids.
 
 TASK REQUIREMENTS (in this exact order) — ALL MUST BE IN OUTPUT:
+- Towergate: detect towergate → pass through towergate → stop
+- Towergate: detect towergate → pass through towergate → stop
 - Gate: detect gate → pass through gate → stop
 - Gate: detect gate → pass through gate → stop
 - Water Delivery: detect triangle → go to triangle → shoot water → stop

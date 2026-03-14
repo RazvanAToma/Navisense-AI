@@ -29,6 +29,18 @@
       "x": 35,
       "y": 25,
       "source": "estimated"
+    },
+    "green_tower_2": {
+      "type": "green_buoy",
+      "x": 50,
+      "y": 20,
+      "source": "estimated"
+    },
+    "red_tower_1": {
+      "type": "red_buoy",
+      "x": 50,
+      "y": 24,
+      "source": "estimated"
     }
   }
 }
