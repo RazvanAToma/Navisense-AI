@@ -99,6 +99,4 @@ if __name__ == "__main__":
 
     db_functions = DBfunctions()
 
-    print(db_functions.read_db())
-    db_functions.add_element(1, "green_buoy_1", 10, 10, 0)
-    print(db_functions.read_db())
+    
