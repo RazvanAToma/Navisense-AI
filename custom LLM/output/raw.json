@@ -1,143 +1,22 @@
 {
-  "tasks": [
+  "ts": [
     {
-      "task": "Towergate: detect towergate \u2192 pass through towergate \u2192 stop",
-      "sequence": [
+      "t": "speedgate",
+      "s": [
         {
-          "node": "SearchPattern",
-          "reason": "green_tower_2 and red_tower_1 are [estimated], need to confirm their positions",
-          "inputs": {
-            "object_ids": [
-              "green_tower_2",
-              "red_tower_1"
+          "n": "DriveSpeedgate",
+          "i": {
+            "ids": [
+              "green_buoy_0",
+              "red_buoy_1",
+              "yellow_buoy_2",
+              "green_beacon_4"
             ]
           }
         },
         {
-          "node": "PassThroughGate",
-          "reason": "green_tower_2 and red_tower_1 are now [detected] and form a valid towergate",
-          "inputs": {
-            "object_ids": [
-              "green_tower_2",
-              "red_tower_1"
-            ]
-          }
-        },
-        {
-          "node": "HoldPosition",
-          "reason": "task completed, holding position before the next task",
-          "inputs": {}
-        }
-      ]
-    },
-    {
-      "task": "Towergate: detect towergate \u2192 pass through towergate \u2192 stop",
-      "sequence": [
-        {
-          "node": "SearchPattern",
-          "reason": "green_tower_2 and red_tower_1 are already consumed, no valid towergate left, this is an error, but following rules: use next valid set",
-          "inputs": {}
-        },
-        {
-          "node": "MoveToPoint",
-          "reason": "no valid towergate, moving to a point for the next valid task",
-          "inputs": {
-            "object_ids": [
-              "triangle_1"
-            ]
-          }
-        },
-        {
-          "node": "HoldPosition",
-          "reason": "task completed, holding position before the next task",
-          "inputs": {}
-        }
-      ]
-    },
-    {
-      "task": "Gate: detect gate \u2192 pass through gate \u2192 stop",
-      "sequence": [
-        {
-          "node": "SearchPattern",
-          "reason": "green_buoy_4 and red_buoy_1 are [estimated], need to confirm their positions",
-          "inputs": {
-            "object_ids": [
-              "green_buoy_4",
-              "red_buoy_1"
-            ]
-          }
-        },
-        {
-          "node": "PassThroughGate",
-          "reason": "green_buoy_4 and red_buoy_1 are now [detected] and form a valid gate",
-          "inputs": {
-            "object_ids": [
-              "green_buoy_4",
-              "red_buoy_1"
-            ]
-          }
-        },
-        {
-          "node": "HoldPosition",
-          "reason": "task completed, holding position before the next task",
-          "inputs": {}
-        }
-      ]
-    },
-    {
-      "task": "Gate: detect gate \u2192 pass through gate \u2192 stop",
-      "sequence": [
-        {
-          "node": "SearchPattern",
-          "reason": "green_buoy_4 and red_buoy_1 are already consumed, no valid gate left, this is an error, but following rules: use next valid set",
-          "inputs": {}
-        },
-        {
-          "node": "MoveToPoint",
-          "reason": "no valid gate, moving to a point for the next valid task",
-          "inputs": {
-            "object_ids": [
-              "triangle_1"
-            ]
-          }
-        },
-        {
-          "node": "HoldPosition",
-          "reason": "task completed, holding position before the next task",
-          "inputs": {}
-        }
-      ]
-    },
-    {
-      "task": "Water Delivery: detect triangle \u2192 go to triangle \u2192 shoot water \u2192 stop",
-      "sequence": [
-        {
-          "node": "SearchPattern",
-          "reason": "triangle_1 is [estimated], need to confirm its position",
-          "inputs": {
-            "object_ids": [
-              "triangle_1"
-            ]
-          }
-        },
-        {
-          "node": "MoveToPoint",
-          "reason": "triangle_1 is now [detected], moving to it",
-          "inputs": {
-            "object_ids": [
-              "triangle_1"
-            ]
-          }
-        },
-        {
-          "node": "ShootWater",
-          "reason": "arrived at triangle_1, shooting water",
-          "inputs": {}
-        },
-        {
-          "node": "HoldPosition",
-          "reason": "task completed, holding position",
-          "inputs": {}
+          "n": "HoldPosition",
+          "i": {}
         }
       ]
     }

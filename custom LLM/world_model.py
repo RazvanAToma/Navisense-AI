@@ -1,12 +1,8 @@
-# world_model.py
-# Handles loading, updating, and saving the world model at runtime.
-# Called by main.py whenever new detections come in.
-
 import json
 import math
 from pathlib import Path
 
-WORLD_MODEL_PATH = Path("custom LLM/config/world_model.json")
+WORLD_MODEL_PATH = Path(__file__).parent / "config" / "world_model.json"
 
 
 def load() -> dict:
@@ -19,34 +15,30 @@ def save(world_model: dict):
         json.dump(world_model, f, indent=2)
 
 
+def filter_for_task(world_model: dict, task_name: str) -> dict:
+    from config.task_config import TASK_RULES
+    required_types = TASK_RULES[task_name]["required_types"]
+    filtered = {
+        obj_id: state
+        for obj_id, state in world_model["objects"].items()
+        if state["type"] in required_types
+    }
+    return {"objects": filtered}
+
+
 def update_object(world_model: dict, obj_id: str, x: float, y: float,
                   source: str = "detected", save_to_disk: bool = True):
-    """
-    Update or insert an object in the world model.
-    Called when YOLO/LiDAR confirms or refines a detection.
-    source should be 'detected' for sensor confirmations.
-    """
     if obj_id not in world_model["objects"]:
-        raise KeyError(f"Object '{obj_id}' not found in world model. Add it first.")
-
+        raise KeyError(f"Object '{obj_id}' not found in world model.")
     world_model["objects"][obj_id]["x"]      = x
     world_model["objects"][obj_id]["y"]      = y
     world_model["objects"][obj_id]["source"] = source
-
-    if save_to_disk:
-        save(world_model)
-
-
-def mark_used(world_model: dict, obj_id: str, save_to_disk: bool = True):
-    """Mark an object as used so it cannot be reused in another task."""
-    world_model["objects"][obj_id]["used"] = True
     if save_to_disk:
         save(world_model)
 
 
 def update_boat(world_model: dict, x: float, y: float,
                 heading: float, save_to_disk: bool = True):
-    """Update boat position, called continuously from nav stack."""
     world_model["boat"]["x"]       = x
     world_model["boat"]["y"]       = y
     world_model["boat"]["heading"] = heading
@@ -55,7 +47,6 @@ def update_boat(world_model: dict, x: float, y: float,
 
 
 def distance(world_model: dict, obj_a: str, obj_b: str) -> float:
-    """Euclidean distance in meters between two objects."""
     a = world_model["objects"][obj_a]
     b = world_model["objects"][obj_b]
     return math.sqrt((a["x"] - b["x"]) ** 2 + (a["y"] - b["y"]) ** 2)

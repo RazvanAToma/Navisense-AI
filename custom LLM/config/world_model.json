@@ -4,13 +4,25 @@
       "type": "green_buoy",
       "x": 20.0,
       "y": 20.0,
-      "source": "estimated"
+      "source": "detected"
     },
     "red_buoy_1": {
       "type": "red_buoy",
       "x": 20.0,
       "y": 20.0,
-      "source": "estimated"
+      "source": "detected"
+    },
+    "yellow_buoy_2": {
+      "type": "yellow_buoy",
+      "x": 50.0,
+      "y": 20.0,
+      "source": "detected"
+    },
+    "green_beacon_4": {
+      "type": "green_beacon",
+      "x": 30.0,
+      "y": 20.0,
+      "source": "detected"
     }
   }
 }
