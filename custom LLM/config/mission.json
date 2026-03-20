@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "name": "gate",
+      "rules": "a gate consists of one green, and one red buoy no further apart than 10m. The boat should pass between these gates, then hold position",
+      "buoys": ["green_buoy_1", "red_buoy_2"]
+    },
+    {
+      "name": "speedgate",
+      "rules": "find gate, beacon and yellow buoy, beacon color determines direction: green_beacon = CCW around yellow buoy, red_beacon = CW around yellow buoy, hold position at the end",
+      "buoys": ["green_buoy_3", "red_buoy_4", "green_beacon_5", "yellow_buoy_6"]
+    }
+  ]
+}

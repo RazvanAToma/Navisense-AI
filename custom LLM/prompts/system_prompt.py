@@ -1,6 +1,5 @@
-def build_system_prompt(node_registry: dict, world_model_filtered: dict, task_name: str) -> str:
-    from config.task_config import TASK_RULES
-    rules = TASK_RULES[task_name]["rules"]
+def build_system_prompt(node_registry: dict, world_model_filtered: dict, task: dict) -> str:
+    valid_nodes = ", ".join(f'"{n}"' for n in node_registry.keys())
 
     node_descriptions = "\n".join(
         f"- \"{name}\": {info['description']}"
@@ -14,16 +13,13 @@ def build_system_prompt(node_registry: dict, world_model_filtered: dict, task_na
     ) or "- No relevant objects detected"
 
     return f"""Output raw JSON only. No explanation, no markdown, no code fences.
-Node names are case-sensitive strings. Copy them EXACTLY as listed. Do not paraphrase, shorten, or invent node names.
+VALID NODE NAMES (copy exactly, case-sensitive): {valid_nodes}
 Every step must have exactly these fields: "n", "i".
-
 [detected] = confirmed by sensors. Use directly.
-[estimated] = position is approximate. You MUST run SearchPattern on every [estimated] object before using it in any other node. No exceptions.
+[estimated] = approximate position. You MUST run SearchPattern on every [estimated] object before using it in any other node.
 
-The final step of EVERY task MUST always be HoldPosition with empty ids. No exceptions.
-
-TASK: {task_name}
-RULES: {rules}
+TASK: {task['name']}
+RULES: {task['rules']}
 
 NODE REGISTRY:
 {node_descriptions}
@@ -33,19 +29,21 @@ WORLD MODEL (relevant objects only):
 """
 
 
-def build_user_message(task_name: str) -> str:
-    return f"""Plan the "{task_name}" task. Output a single JSON object. No explanation.
+def build_user_message(task: dict) -> str:
+    buoy_list = ", ".join(f'"{b}"' for b in task["buoys"])
+    return f"""Plan the "{task['name']}" task. Output a single JSON object. No explanation.
+You MUST only use these exact object ids: {buoy_list}. No other ids are valid.
+If multiple objects are [estimated], group them ALL into one single SearchPattern step.
 
+The following is a FORMAT EXAMPLE ONLY. Do not copy node names or ids from it.
 {{
   "ts": [
     {{
-      "t": "{task_name}",
+      "t": "task_name",
       "s": [
         {{
-          "n": "NodeName from registry",
-          "i": {{
-            "ids": ["object_id_from_world_model"]
-          }}
+          "n": "NodeName",
+          "i": {{"ids": ["object_id"]}}
         }}
       ]
     }}

@@ -2,6 +2,7 @@ import sqlite3
 import json
 from pathlib import Path
 
+# Transforming DB to JSON
 DB_PATH  = Path(__file__).parent / "db" / "database.db"
 OUT_PATH = Path(__file__).parent / "config" / "world_model.json"
 
@@ -12,7 +13,7 @@ def parse_course_to_world_model(db_path: Path = DB_PATH, out_path: Path = OUT_PA
     cursor = conn.cursor()
     cursor.execute("""
         SELECT
-            ce.element_id,
+            ce.id,
             ce.x,
             ce.y,
             ce.rotation,
@@ -26,7 +27,7 @@ def parse_course_to_world_model(db_path: Path = DB_PATH, out_path: Path = OUT_PA
     objects = {}
     for row in rows:
         obj_type = row["name"].lower().replace(" ", "_")
-        obj_key  = f"{obj_type}_{row['element_id']}"
+        obj_key  = f"{obj_type}_{row['id']}"
         objects[obj_key] = {
             "type":   obj_type,
             "x":      row["x"],
