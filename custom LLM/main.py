@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     main.run()
 
-    '''
+    """
     db = DBfunctions()
     db.clear_db("course_elements")
     gate = db.add_gate(course_id=1, green_x=20, green_y=20, red_x=30, red_y=20)
@@ -181,4 +181,7 @@ if __name__ == "__main__":
         beacon_x=65, beacon_y=10, beacon_color="green_beacon",
         yellow_x=65, yellow_y=35,
     )
-    '''
+
+    tower_gate = db.add_towergate(course_id=1, green_x=100, green_y=20, red_x=110, red_y=20)
+    tower_gate = db.add_towergate(course_id=1, green_x=100, green_y=40, red_x=110, red_y=40)
+    """

@@ -1,1 +1,0 @@
-print("Orbiting target, scanning for second object...")

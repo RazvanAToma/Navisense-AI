@@ -35,6 +35,30 @@
       "x": 65.0,
       "y": 35.0,
       "source": "detected"
+    },
+    "green_tower_7": {
+      "type": "green_tower",
+      "x": 100.0,
+      "y": 20.0,
+      "source": "detected"
+    },
+    "red_tower_8": {
+      "type": "red_tower",
+      "x": 110.0,
+      "y": 20.0,
+      "source": "detected"
+    },
+    "green_tower_9": {
+      "type": "green_tower",
+      "x": 100.0,
+      "y": 40.0,
+      "source": "detected"
+    },
+    "red_tower_10": {
+      "type": "red_tower",
+      "x": 110.0,
+      "y": 40.0,
+      "source": "detected"
     }
   }
 }

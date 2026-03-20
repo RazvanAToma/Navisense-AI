@@ -1,1 +1,0 @@
-print("Passing through gate...")

@@ -1,1 +1,0 @@
-print("Moving to point...")
