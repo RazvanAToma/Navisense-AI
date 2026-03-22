@@ -1,0 +1,234 @@
+{
+  "exported_at": "2026-03-21T19:03:38Z",
+  "competition": {
+    "id": 3,
+    "name": "RoboBoat 2026"
+  },
+  "course": {
+    "id": 11,
+    "name": "Testing",
+    "width": 100,
+    "height": 100,
+    "heading": 0
+  },
+  "competition_elements": [
+    {
+      "id": 8,
+      "element_type": 0,
+      "name": "Green Buoy",
+      "size": "21"
+    },
+    {
+      "id": 9,
+      "element_type": 1,
+      "name": "Red Buoy",
+      "size": "21"
+    },
+    {
+      "id": 10,
+      "element_type": 2,
+      "name": "Yellow Buoy",
+      "size": "21"
+    },
+    {
+      "id": 11,
+      "element_type": 3,
+      "name": "Green Tower",
+      "size": "50"
+    },
+    {
+      "id": 12,
+      "element_type": 4,
+      "name": "Red Tower",
+      "size": "50"
+    },
+    {
+      "id": 13,
+      "element_type": 5,
+      "name": "Black Buoy",
+      "size": "21"
+    },
+    {
+      "id": 14,
+      "element_type": 6,
+      "name": "Plus Boat",
+      "size": "150;100"
+    },
+    {
+      "id": 15,
+      "element_type": 7,
+      "name": "Triangle Boat",
+      "size": "150;100"
+    },
+    {
+      "id": 16,
+      "element_type": 8,
+      "name": "Green Beacon",
+      "size": "100;100"
+    },
+    {
+      "id": 17,
+      "element_type": 9,
+      "name": "Red Beacon",
+      "size": "100;100"
+    },
+    {
+      "id": 19,
+      "element_type": -1,
+      "name": "Triton (Starting Point)",
+      "size": "90;140"
+    },
+    {
+      "id": 23,
+      "element_type": -1,
+      "name": "Dock Element Long",
+      "size": "100;1200"
+    },
+    {
+      "id": 24,
+      "element_type": -1,
+      "name": "Dock Element Short",
+      "size": "300;100"
+    }
+  ],
+  "course_elements": [
+    {
+      "id": 166,
+      "element_id": 11,
+      "name": "Green Tower",
+      "element_type": 3,
+      "x": 30.21,
+      "y": -24.5,
+      "rotation": 0.0
+    },
+    {
+      "id": 167,
+      "element_id": 12,
+      "name": "Red Tower",
+      "element_type": 4,
+      "x": 30.26,
+      "y": -13.53,
+      "rotation": 0.0
+    },
+    {
+      "id": 168,
+      "element_id": 12,
+      "name": "Red Tower",
+      "element_type": 4,
+      "x": 44.09,
+      "y": -13.56,
+      "rotation": 0.0
+    },
+    {
+      "id": 169,
+      "element_id": 11,
+      "name": "Green Tower",
+      "element_type": 3,
+      "x": 44.25,
+      "y": -24.21,
+      "rotation": 0.0
+    },
+    {
+      "id": 170,
+      "element_id": 19,
+      "name": "Triton (Starting Point)",
+      "element_type": -1,
+      "x": 19.79,
+      "y": -18.22,
+      "rotation": 0.0
+    }
+  ],
+  "competition_rules": [
+    {
+      "id": 23,
+      "title": "gate",
+      "content": "- A set of two (2) buoys that should be passed by going through them"
+    },
+    {
+      "id": 24,
+      "title": "circle",
+      "content": "- Circle around a point with a safe distance (1-5m)\n- Can be either clockwise (CW) or counter-clockwise (CCW) decided by other factors"
+    },
+    {
+      "id": 25,
+      "title": "dock",
+      "content": "- Dock in an availiable slot\n- A slot is unavailiable if another object is occupying the midpoint of it.\n- Outside factors might set slot-preferations"
+    },
+    {
+      "id": 26,
+      "title": "deliver",
+      "content": "- Can be either water or ball delivery\n- Water should be delivered in at least 10 seconds with steady aim\n- Balls should hit the target directly"
+    },
+    {
+      "id": 30,
+      "title": "start",
+      "content": "- Starting point of the mission\n- Stay in this position heading towards the first mission before countinuing"
+    },
+    {
+      "id": 31,
+      "title": "Entry Gates",
+      "content": "- Contains two (2) \"gate\"-instances\n- Each \"gate\" consist of one (1) \"Green Tower (3)\" and one (1) \"Red Tower (4)\"\n- Each \"gate\" can have a max width of 12 meters\n- Start by going through the gate closest to the \"start\"\n- Task is completed when both gates have been passed"
+    },
+    {
+      "id": 32,
+      "title": "Exit Gates",
+      "content": "- Contains two (2) \"gate\"-instances\n- Each \"gate\" consist of one (1) \"Green Tower (3)\" and one (1) \"Red Tower (4)\"\n- Each \"gate\" can have a max width of 12 meters\n- Start by going through the gate furthest away from the \"start\"\n- Task is completed when both gates have been passed"
+    },
+    {
+      "id": 33,
+      "title": "Obstacle Course",
+      "content": "- Contains four (4) \"gate\"-instances\n- Contains several obstacles that should be avoided\n- Each \"gate\" consist of one (1) \"Green Buoy (0)\" and one (1) \"Red Buoy (1)\"\n- All other elements are obstacles\n- Each \"gate\" can have a max width of 8 meters\n- After passing the last gate, navigate all the way past the obstacles in the same direction\n- If there are any \"Green Beacon (7)\" in the obstacle course, \"circle\" it when passing it\n- Task is completed when all gates and obstacles have been passed"
+    },
+    {
+      "id": 34,
+      "title": "Speed Challenge",
+      "content": "- Contains one (1) \"gate\"-instance\n- Might contain obstacles that should be avoided\n- \"gate\" consist of one (1) \"Green Buoy (0)\" and one (1) \"Red Buoy (1)\"\n- After passing the gate, a \"Green Beacon (8)\" or a \"Red Beacon (9)\" should be observed\n- \"circle\" the \"Yellow Buoy (2)\" in direction: CW if \"Green Beacon (8)\" was observed, or CCW if \"Red Beacon (9)\" was observed\n- Pass through the \"gate\" again after circling \"Yellow Buoy (2)\"\n- Task is completed after passing through the \"gate\" for the second time (after observation and circle)"
+    },
+    {
+      "id": 35,
+      "title": "Docking",
+      "content": "- Docking contains two solid docks formed by \"Dock Element Long\" and \"Dock Element Short\", and a \"Yellow Buoy (2)\"\n- Start by navigationg towards the \"Yellow Buoy (2)\", and observe the \"Dock Element\"\n- After observing the \"Dock Element\", enter the docking area, and \"dock\" in any availiable slot\n- After keeping position in an availiable dock for at least 15 seconds, exit the docking area towards the \"Yellow Buoy (2)\" safely\n- Task is completed when all steps is finished and the dock area has been exited"
+    },
+    {
+      "id": 36,
+      "title": "Water Delivery",
+      "content": "- Contains up to three (3) \"Triangle Boat (7)\"\n- For each of the elements, go next to it, face it, and deliver water to it.\n- Task is complete when water has been delivered to all elements"
+    },
+    {
+      "id": 37,
+      "title": "Ball Delivery",
+      "content": "- Contains up to three (3) \"Plus Boat (6)\"\n- For each of the elements, go next to it, face it, and deliver one (1) ball to it.\n- Task is complete when balls have been delivered to all elements"
+    }
+  ],
+  "running_order": [
+    {
+      "position": 1,
+      "part_id": 27,
+      "rule_id": 31,
+      "rule_title": "Entry Gates",
+      "rule_content": "- Contains two (2) \"gate\"-instances\n- Each \"gate\" consist of one (1) \"Green Tower (3)\" and one (1) \"Red Tower (4)\"\n- Each \"gate\" can have a max width of 12 meters\n- Start by going through the gate closest to the \"start\"\n- Task is completed when both gates have been passed",
+      "elements": [
+        {
+          "course_element_id": 166,
+          "name": "Green Tower",
+          "element_type": 3
+        },
+        {
+          "course_element_id": 169,
+          "name": "Green Tower",
+          "element_type": 3
+        },
+        {
+          "course_element_id": 167,
+          "name": "Red Tower",
+          "element_type": 4
+        },
+        {
+          "course_element_id": 168,
+          "name": "Red Tower",
+          "element_type": 4
+        }
+      ]
+    }
+  ]
+}

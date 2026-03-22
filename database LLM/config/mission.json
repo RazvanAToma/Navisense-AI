@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "name": "Entry Gates",
+      "rules": "- Contains two (2) \"gate\"-instances\n- Each \"gate\" consist of one (1) \"Green Tower (3)\" and one (1) \"Red Tower (4)\"\n- Each \"gate\" can have a max width of 12 meters\n- Start by going through the gate closest to the \"start\"\n- Task is completed when both gates have been passed",
+      "buoys": [
+        "green_tower_166",
+        "green_tower_169",
+        "red_tower_167",
+        "red_tower_168"
+      ]
+    }
+  ]
+}

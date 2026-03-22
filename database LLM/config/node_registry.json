@@ -1,0 +1,18 @@
+{
+  "PassThroughGate": {
+    "script": "custom LLM/nodes/pass_through_gates.py",
+    "description": "Drives through the midpoint between one green and one red tower or buoy pair. Use for gate and towergate tasks. Input both objects. Do NOT use for speedgate."
+  },
+  "SearchPattern": {
+    "script": "custom LLM/nodes/search_pattern.py",
+    "description": "Executes a spiral or lawnmower search pattern centered on the given (x, y) coordinate. Use this when a required object is marked [estimated] from the world model. After SearchPattern completes, assume the object has been found and confirmed. Do NOT use this if the object is already marked [detected]."
+  },
+  "DriveSpeedgate": {
+    "script": "custom LLM/nodes/drive_speedgate.py",
+    "description": "Executes the full speedgate sequence atomically. Use ONLY for speedgate tasks. REQUIRES: green buoy, red buoy, beacon, and yellow buoy."
+  },
+  "ShootWater": {
+    "script": "custom LLM/nodes/shoot_water.py",
+    "description": "Shoots a stream of water for 10 seconds"
+  }
+}

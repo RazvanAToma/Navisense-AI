@@ -1,0 +1,22 @@
+{
+  "PassThroughGate": {
+    "script": "output LLM/nodes/pass_through_gates.py",
+    "description": "Drives through the midpoint between one green and one red tower or buoy pair. Use for gate and towergate tasks. Input both objects. Do NOT use for speedgate."
+  },
+  "SearchPattern": {
+    "script": "output LLM/nodes/search_pattern.py",
+    "description": "Executes a search pattern for objects marked [estimated]. Use when a required object is [estimated]. Do NOT use if object is already [detected]."
+  },
+  "DriveSpeedgate": {
+    "script": "output LLM/nodes/drive_speedgate.py",
+    "description": "Executes the full speedgate sequence atomically. Use ONLY for speedgate tasks. REQUIRES: green buoy, red buoy, beacon, and yellow buoy all [detected]."
+  },
+  "ShootWater": {
+    "script": "output LLM/nodes/shoot_water.py",
+    "description": "Drives to the target and shoots water for 10 seconds. Use for water delivery tasks. REQUIRES: target [detected]."
+  },
+  "HoldPosition": {
+    "script": "output LLM/nodes/hold_position.py",
+    "description": "Stops and holds current position. Always the final step of any task."
+  }
+}

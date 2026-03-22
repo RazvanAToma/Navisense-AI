@@ -1,0 +1,27 @@
+{
+  "ts": [
+    {
+      "t": "Entry Gates",
+      "s": [
+        {
+          "n": "PassThroughGate",
+          "i": {
+            "ids": [
+              "green_tower_166",
+              "red_tower_167"
+            ]
+          }
+        },
+        {
+          "n": "SearchPattern",
+          "i": {
+            "ids": [
+              "green_tower_169",
+              "red_tower_168"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
